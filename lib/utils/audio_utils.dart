@@ -6,9 +6,9 @@ import 'package:ffmpeg_kit_flutter_audio/return_code.dart';
 import 'package:path_provider/path_provider.dart';
 
 class AudioUtils {
-  static Future<File?> convertWavToOpus(File? wavFile) async {
-    if (wavFile == null) return null;
-    if (!await wavFile.exists()) {
+  static Future<File?> convertWavToOpus(File? file) async {
+    if (file == null) return null;
+    if (!await file.exists()) {
       print('WAV file not found');
       return null;
     }
@@ -23,7 +23,7 @@ class AudioUtils {
       }
 
       // 使用 FFmpeg 转换命令，使用 Opus 编码器
-      final String command = '-i ${wavFile.path} -c:a libopus -b:a 64k -vbr on -ar 48000 $outputPath';
+      final String command = '-i ${file.path} -c:a libopus -b:a 64k -vbr on -ar 48000 $outputPath';
 
       final FFmpegSession session = await FFmpegKit.execute(command);
       final ReturnCode? returnCode = await session.getReturnCode();
@@ -52,9 +52,9 @@ class AudioUtils {
     return null; // 如果出错或转换失败，返回 null
   }
 
-  static Future<File?> convertWavToAAC(File? wavFile) async {
-    if (wavFile == null) return null;
-    if (!await wavFile.exists()) {
+  static Future<File?> convertWavToAAC(File? file) async {
+    if (file == null) return null;
+    if (!await file.exists()) {
       print('WAV file not found');
       return null;
     }
@@ -69,7 +69,7 @@ class AudioUtils {
       }
 
       // AAC 转换和压缩命令
-      final String command = '-i ${wavFile.path} '
+      final String command = '-i ${file.path} '
           '-c:a aac ' // 使用 AAC 编码器
           '-b:a 16k ' // 设置比特率为 96kbps (可以根据需要调整)
           '-ar 16000 ' // 设置采样率
@@ -89,7 +89,7 @@ class AudioUtils {
         final File aacFile = File(outputPath);
         if (await aacFile.exists() && await aacFile.length() > 0) {
           // 计算压缩比
-          final double originalSize = await wavFile.length() / 1024; // KB
+          final double originalSize = await file.length() / 1024; // KB
           final double compressedSize = await aacFile.length() / 1024; // KB
           final double compressionRatio = ((originalSize - compressedSize) / originalSize * 100);
 
@@ -113,9 +113,9 @@ class AudioUtils {
   }
 
   // 新增的 MP3 转 AAC 方法
-  static Future<File?> convertMp3ToAAC(File? mp3File) async {
-    if (mp3File == null) return null;
-    if (!await mp3File.exists()) {
+  static Future<File?> convertMp3ToAAC(File? file) async {
+    if (file == null) return null;
+    if (!await file.exists()) {
       print('MP3 file not found');
       return null;
     }
@@ -130,7 +130,7 @@ class AudioUtils {
       }
 
       // MP3 转换为 AAC 命令
-      final String command = '-i ${mp3File.path} '
+      final String command = '-i ${file.path} '
           '-c:a aac ' // 使用 AAC 编码器
           '-b:a 16k ' // 设置比特率为 16kbps (可以根据需要调整)
           '-ar 16000 ' // 设置采样率为 16000Hz
@@ -164,9 +164,9 @@ class AudioUtils {
     return null; // 如果出错或转换失败，返回 null
   }
 
-  static Future<File?> convertMp3ToWav(File? mp3File) async {
-    if (mp3File == null) return null;
-    if (!await mp3File.exists()) {
+  static Future<File?> convertMp3ToWav(File? file) async {
+    if (file == null) return null;
+    if (!await file.exists()) {
       print('MP3 file not found');
       return null;
     }
@@ -181,7 +181,7 @@ class AudioUtils {
       }
 
       // MP3 转 WAV 命令，采样率 16kHz，单声道
-      final String command = '-i ${mp3File.path} '
+      final String command = '-i ${file.path} '
           '-c:a pcm_s16le ' // 使用 PCM 16-bit 编码
           '-ar 16000 ' // 设置采样率为 16kHz
           '-ac 1 ' // 设置为单声道
@@ -214,9 +214,9 @@ class AudioUtils {
     return null; // 如果出错或转换失败，返回 null
   }
 
-  static Future<File?> convertMp3ToM4a(File? mp3File) async {
-    if (mp3File == null) return null;
-    if (!await mp3File.exists()) {
+  static Future<File?> convertMp3ToM4a(File? file) async {
+    if (file == null) return null;
+    if (!await file.exists()) {
       print('MP3 file not found');
       return null;
     }
@@ -231,7 +231,7 @@ class AudioUtils {
       }
 
       // MP3 转 M4A 命令，使用 AAC 编码，采样率 16kHz，单声道，比特率 64kbps
-      final String command = '-i ${mp3File.path} '
+      final String command = '-i ${file.path} '
           '-c:a aac ' // 使用 AAC 编码器
           '-b:a 16k ' // 设置比特率为 16kbps
           '-ar 16000 ' // 设置采样率为 16kHz
