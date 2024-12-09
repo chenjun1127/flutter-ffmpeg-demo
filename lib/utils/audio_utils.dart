@@ -23,7 +23,7 @@ class AudioUtils {
       }
 
       // 使用 FFmpeg 转换命令，使用 Opus 编码器
-      final String command = '-i ${file.path} -c:a libopus -b:a 64k -vbr on -ar 48000 $outputPath';
+      final String command = '-i ${file.path} -c:a libopus -b:a 16k -vbr on -ar 16000 $outputPath';
 
       final FFmpegSession session = await FFmpegKit.execute(command);
       final ReturnCode? returnCode = await session.getReturnCode();

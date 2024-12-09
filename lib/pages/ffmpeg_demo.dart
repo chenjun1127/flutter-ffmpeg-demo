@@ -2,10 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_ffmpg/utils/audio_utils.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:path_provider/path_provider.dart';
-
-import 'package:flutter_ffmpg/utils/audio_utils.dart';
 
 class FFmpegDemo extends StatefulWidget {
   const FFmpegDemo({super.key});
@@ -28,10 +27,10 @@ class _FFmpegDemoState extends State<FFmpegDemo> {
 
   Future<void> _initialize() async {
     await _player.openPlayer();
-    await loadWavFromAssets();
+    await loadFileFromAssets();
   }
 
-  Future<void> loadWavFromAssets() async {
+  Future<void> loadFileFromAssets() async {
     setState(() {
       _status = 'Loading WAV file...';
     });
@@ -53,12 +52,12 @@ class _FFmpegDemoState extends State<FFmpegDemo> {
       }
 
       setState(() {
-        _status = 'WAV file loaded successfully';
+        _status = 'File loaded successfully';
         _wavFile = file;
       });
     } catch (e) {
       setState(() {
-        _status = 'Error loading WAV: $e';
+        _status = 'Error loading : $e';
       });
     }
   }
@@ -67,7 +66,7 @@ class _FFmpegDemoState extends State<FFmpegDemo> {
     final Stopwatch stopwatch = Stopwatch()..start(); // 开始计时
     if (_wavFile == null || !await _wavFile!.exists()) {
       setState(() {
-        _status = 'WAV file not found';
+        _status = 'File not found';
       });
       return;
     }
@@ -76,7 +75,7 @@ class _FFmpegDemoState extends State<FFmpegDemo> {
       _status = 'Converting and compressing...';
     });
 
-    final File? file = await AudioUtils.convertMp3ToM4a(_wavFile);
+    final File? file = await AudioUtils.convertWavToOpus(_wavFile);
     stopwatch.stop(); // 停止计时
     print('Conversion time: ${stopwatch.elapsedMilliseconds} ms'); // 输出耗时
     setState(() {
