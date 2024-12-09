@@ -71,9 +71,9 @@ class AudioUtils {
       // AAC 转换和压缩命令
       final String command = '-i ${file.path} '
           '-c:a aac ' // 使用 AAC 编码器
-          '-b:a 16k ' // 设置比特率为 96kbps (可以根据需要调整)
+          '-b:a 16k ' // 设置比特率为 16kbps (可以根据需要调整)
           '-ar 16000 ' // 设置采样率
-          '-ac 1 ' // 设置为双声道
+          '-ac 1 ' // 设置为单声道
           '-y ' // 覆盖已存在的文件
           '$outputPath';
 
