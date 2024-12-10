@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_ffmpg/utils/audio_utils.dart';
@@ -15,9 +14,9 @@ class FFmpegDemo extends StatefulWidget {
 
 class _FFmpegDemoState extends State<FFmpegDemo> {
   String _status = 'Idle';
-  File? _wavFile;
-  File? _aacFile;
-  final FlutterSoundPlayer _player = FlutterSoundPlayer();
+  File? _sourceAudioFile;
+  File? _convertedAudioFile;
+  final FlutterSoundPlayer _audioPlayer = FlutterSoundPlayer();
 
   @override
   void initState() {
@@ -26,13 +25,14 @@ class _FFmpegDemoState extends State<FFmpegDemo> {
   }
 
   Future<void> _initialize() async {
-    await _player.openPlayer();
-    await loadFileFromAssets();
+    await _audioPlayer.openPlayer();
+    await _loadAudioFileFromAssets();
   }
 
-  Future<void> loadFileFromAssets() async {
+  // 加载音频文件，默认加载一个mp3文件
+  Future<void> _loadAudioFileFromAssets() async {
     setState(() {
-      _status = 'Loading WAV file...';
+      _status = 'Loading audio file...';
     });
 
     try {
@@ -48,43 +48,46 @@ class _FFmpegDemoState extends State<FFmpegDemo> {
       await file.writeAsBytes(byteData.buffer.asUint8List());
 
       if (await file.length() == 0) {
-        throw Exception('File is empty');
+        throw Exception('Loaded file is empty');
       }
 
       setState(() {
-        _status = 'File loaded successfully';
-        _wavFile = file;
+        _status = 'Audio file loaded successfully';
+        _sourceAudioFile = file;
       });
     } catch (e) {
       setState(() {
-        _status = 'Error loading : $e';
+        _status = 'Error loading file: $e';
       });
     }
   }
 
-  Future<void> convertWavToAAC() async {
-    final Stopwatch stopwatch = Stopwatch()..start(); // 开始计时
-    if (_wavFile == null || !await _wavFile!.exists()) {
+  // 转换音频文件，转换为合适的格式
+  Future<void> _convertAudio() async {
+    final Stopwatch stopwatch = Stopwatch()..start(); // Start timer
+    if (_sourceAudioFile == null || !await _sourceAudioFile!.exists()) {
       setState(() {
-        _status = 'File not found';
+        _status = 'Source audio file not found';
       });
       return;
     }
 
     setState(() {
-      _status = 'Converting and compressing...';
+      _status = 'Converting audio...';
     });
 
-    final File? file = await AudioUtils.convertWavToOpus(_wavFile);
-    stopwatch.stop(); // 停止计时
-    print('Conversion time: ${stopwatch.elapsedMilliseconds} ms'); // 输出耗时
+    final File? convertedFile = await AudioUtils.convertAudioToMp3(_sourceAudioFile);
+    stopwatch.stop(); // Stop timer
+    print('Conversion time: ${stopwatch.elapsedMilliseconds} ms'); // Log conversion time
+
     setState(() {
-      _status = 'Conversion and compression completed';
-      _aacFile = file;
+      _status = 'Audio conversion completed';
+      _convertedAudioFile = convertedFile;
     });
   }
 
-  Future<void> playAudioFile(File file) async {
+  // 播放音频文件
+  Future<void> _playAudioFile(File file) async {
     if (!await file.exists()) {
       setState(() {
         _status = 'Audio file not found';
@@ -93,9 +96,9 @@ class _FFmpegDemoState extends State<FFmpegDemo> {
     }
 
     try {
-      await _player.startPlayer(
+      await _audioPlayer.startPlayer(
         fromURI: file.path,
-        codec: file == _wavFile ? Codec.pcm16WAV : Codec.aacADTS,
+        codec: _getAudioCodec(file), // 使用动态选择的编码格式
         whenFinished: () {
           setState(() {
             _status = 'Playback finished';
@@ -103,7 +106,7 @@ class _FFmpegDemoState extends State<FFmpegDemo> {
         },
       );
       setState(() {
-        _status = 'Playing...';
+        _status = 'Playing audio...';
       });
     } catch (e) {
       setState(() {
@@ -112,9 +115,24 @@ class _FFmpegDemoState extends State<FFmpegDemo> {
     }
   }
 
+  // 根据文件扩展名动态选择合适的编码格式
+  Codec _getAudioCodec(File file) {
+    final String extension = file.path.split('.').last.toLowerCase();
+    switch (extension) {
+      case 'mp3':
+        return Codec.mp3;
+      case 'wav':
+        return Codec.pcm16WAV;
+      case 'aac':
+        return Codec.aacADTS;
+      default:
+        return Codec.defaultCodec;
+    }
+  }
+
   @override
   void dispose() {
-    _player.closePlayer();
+    _audioPlayer.closePlayer();
     super.dispose();
   }
 
@@ -122,7 +140,7 @@ class _FFmpegDemoState extends State<FFmpegDemo> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('WAV to AAC Converter'),
+        title: const Text('Audio Converter'),
       ),
       body: Center(
         child: Padding(
@@ -137,19 +155,19 @@ class _FFmpegDemoState extends State<FFmpegDemo> {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: convertWavToAAC,
-                child: const Text('Convert & Compress to AAC'),
+                onPressed: _convertAudio,
+                child: const Text('Convert Audio'),
               ),
               const SizedBox(height: 20),
-              if (_wavFile != null)
+              if (_sourceAudioFile != null)
                 ElevatedButton(
-                  onPressed: () => playAudioFile(_wavFile!),
-                  child: const Text('Play Original WAV'),
+                  onPressed: () => _playAudioFile(_sourceAudioFile!),
+                  child: const Text('Play Original Audio'),
                 ),
-              if (_aacFile != null)
+              if (_convertedAudioFile != null)
                 ElevatedButton(
-                  onPressed: () => playAudioFile(_aacFile!),
-                  child: const Text('Play Compressed AAC'),
+                  onPressed: () => _playAudioFile(_convertedAudioFile!),
+                  child: const Text('Play Converted Audio'),
                 ),
             ],
           ),
